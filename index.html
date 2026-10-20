@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Chemical Reactions Quiz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+:root{color-scheme:light}
+html,body{min-height:100%}
+body{background:#2F6FB3;min-height:100vh;display:flex;flex-direction:column;color:#222}
+
+#bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(0,0,0,0.14);flex-shrink:0}
+#prog-wrap{flex:1;height:6px;background:rgba(255,255,255,0.3);border-radius:3px;overflow:hidden}
+#prog{height:100%;width:0%;background:#fff;border-radius:3px;transition:width .3s}
+#lv{background:rgba(0,0,0,0.2);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+#teacher-toggle{background:rgba(0,0,0,0.2);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
+
+#quiz-view{flex:1;display:flex;flex-direction:column}
+#retry-bar{background:#c0392b;color:#fff;font-size:13px;font-weight:600;text-align:center;padding:6px;display:none}
+#stage{flex:1;padding:12px;display:flex;justify-content:center;align-items:flex-start}
+#card{background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.18)}
+
+#qhead{padding:22px 18px 14px;text-align:center}
+#badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 10px;border-radius:20px;margin-bottom:8px}
+.b-eq{background:#E8F0FE;color:#1F4E9C}
+.b-acid{background:#FDEBEB;color:#9B2C2C}
+.b-ppt{background:#FEF3E2;color:#854F0B}
+.b-obs{background:#E1F5EE;color:#0F6E56}
+#qtext{font-size:21px;font-weight:700;color:#111;line-height:1.3}
+#qtext.mid{font-size:17px}
+#qtext.long{font-size:15px;font-weight:600}
+#qsub{font-size:12px;color:#999;margin-top:6px}
+
+#grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#d0d0d0;border-top:2px solid #d0d0d0}
+#grid.wide{grid-template-columns:1fr}
+#grid.wide .opt{min-height:0}
+.opt{background:#f0f0f0;padding:16px 12px;display:flex;align-items:flex-start;gap:8px;min-height:90px;cursor:pointer}
+.opt:active{background:#e0e0e0}
+.opt.ok{background:#d4edda}.opt.bad{background:#f8d7da}.opt.show{background:#d4edda}
+.num{width:20px;height:20px;border-radius:4px;background:#ccc;color:#555;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.opt.ok .num,.opt.show .num{background:#28a745;color:#fff}
+.opt.bad .num{background:#dc3545;color:#fff}
+.txt{font-size:14px;color:#333;line-height:1.35;min-width:0;overflow-wrap:anywhere}
+.opt.ok .txt,.opt.show .txt{color:#155724;font-weight:600}
+.opt.bad .txt{color:#721c24}
+
+#frow{padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;min-height:48px;border-top:1px solid #eee;gap:8px}
+#fb-wrap{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+#fb{font-size:13px;font-weight:600}
+#fnote{font-size:13px;color:#555;line-height:1.5;display:none;padding-top:2px}
+.fbok{color:#155724}.fbbad{color:#721c24}
+#nxt{background:#235A94;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;display:none;-webkit-appearance:none;flex-shrink:0;align-self:center}
+
+#stats{display:flex;border-top:1px solid #eee}
+.st{flex:1;text-align:center;padding:9px 2px;border-right:1px solid #eee}
+.st:last-child{border-right:none}
+.sv{font-size:17px;font-weight:700;color:#333}
+.sl{font-size:10px;color:#999;margin-top:2px}
+
+#level-summary,#done{display:none;flex-direction:column;align-items:center;padding:28px 18px;text-align:center}
+#level-summary h2,#done h2{font-size:22px;font-weight:700;color:#222;margin-bottom:6px}
+#done p{font-size:13px;color:#777;margin-bottom:18px}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:20px}
+.dc{background:#f5f5f5;border-radius:10px;padding:12px}
+.dv{font-size:22px;font-weight:700;color:#333}
+.dl{font-size:11px;color:#999;margin-top:2px}
+.dbtn{display:block;width:100%;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;-webkit-appearance:none}
+.dbtn:last-child{margin-bottom:0}
+.teal{background:#235A94;color:#fff}
+.green{background:#28a745;color:#fff}
+.lv-badge{font-size:48px;margin-bottom:8px}
+.lv-tag{display:inline-block;background:#235A94;color:#fff;font-size:13px;font-weight:700;padding:4px 16px;border-radius:20px;margin-bottom:12px}
+.unlock-msg{font-size:13px;color:#155724;font-weight:600;margin-bottom:16px;padding:10px 14px;background:#d4edda;border-radius:10px;width:100%}
+
+#levels{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 12px 14px}
+.lvjump{background:rgba(255,255,255,0.18);color:#fff;border:none;border-radius:20px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.lvjump.on{background:#fff;color:#235A94}
+
+button:focus-visible,.opt:focus-visible{outline:3px solid #123a63;outline-offset:2px}
+
+/* teacher view */
+#teacher-view{display:none;flex:1;flex-direction:column;background:#f7f7f7}
+#tv-toolbar{background:#fff;border-bottom:1px solid #eee;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;flex-wrap:wrap}
+#tv-toolbar h2{font-size:16px;font-weight:700;color:#222}
+#tv-toolbar-right{display:flex;gap:8px;flex-wrap:wrap}
+.tv-btn{border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.tv-btn.green{background:#28a745;color:#fff}
+.tv-btn.gray{background:#eee;color:#555}
+#tv-scroll{flex:1;overflow-y:auto;padding:12px 14px}
+.qcard{background:#fff;border-radius:12px;margin-bottom:12px;overflow:hidden;border:1px solid #e8e8e8}
+.qcard-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f9f9f9;border-bottom:1px solid #eee;cursor:pointer;gap:8px}
+.qcard-num{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+.qcard-preview{font-size:13px;color:#555;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.qcard-lv{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#E1F5EE;color:#0F6E56;flex-shrink:0}
+.qcard-del{background:#f8d7da;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;color:#721c24;cursor:pointer;flex-shrink:0}
+.qcard-body{padding:12px 14px;display:none;flex-direction:column;gap:10px}
+.qcard-body.open{display:flex}
+.field-label{font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.field-input{width:100%;padding:9px 11px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;background:#fff;color:#222;outline:none;-webkit-appearance:none;font-family:inherit}
+.field-input:focus{border-color:#2F6FB3}
+textarea.field-input{resize:vertical;min-height:60px;line-height:1.4}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:1.5px solid #e0e0e0;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#888;cursor:pointer;background:#fff}
+.pill.active{border-color:#2F6FB3;background:#E1F5EE;color:#0F6E56}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint{font-size:12px;color:#888}
+#add-btn{display:block;width:100%;background:#fff;border:2px dashed #2F6FB3;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#235A94;cursor:pointer;text-align:center;margin-top:4px;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <div id="prog-wrap"><div id="prog"></div></div>
+  <div id="lv">Level 1</div>
+  <button id="teacher-toggle">✏ Teacher</button>
+</div>
+
+<div id="quiz-view">
+  <div id="retry-bar">🔁 Retesting cards you missed</div>
+  <div id="stage">
+    <div id="card">
+      <div id="qhead">
+        <div id="badge" class="b-eq">loading</div>
+        <div id="qtext">Getting ready…</div>
+        <div id="qsub"></div>
+      </div>
+      <div id="grid">
+        <div class="opt" id="o0" tabindex="0"><div class="num">1</div><div class="txt"></div></div>
+        <div class="opt" id="o1" tabindex="0"><div class="num">2</div><div class="txt"></div></div>
+        <div class="opt" id="o2" tabindex="0"><div class="num">3</div><div class="txt"></div></div>
+        <div class="opt" id="o3" tabindex="0"><div class="num">4</div><div class="txt"></div></div>
+      </div>
+      <div id="frow">
+        <div id="fb-wrap">
+          <div id="fb"></div>
+          <div id="fnote"></div>
+        </div>
+        <button id="nxt">Next →</button>
+      </div>
+      <div id="stats">
+        <div class="st"><div class="sv" id="sc">0</div><div class="sl">correct</div></div>
+        <div class="st"><div class="sv" id="sr">0</div><div class="sl">retry</div></div>
+        <div class="st"><div class="sv" id="ss">0</div><div class="sl">streak 🔥</div></div>
+        <div class="st"><div class="sv" id="sa">—</div><div class="sl">accuracy</div></div>
+      </div>
+
+      <div id="level-summary">
+        <div class="lv-badge" id="ls-emoji">⭐</div>
+        <div class="lv-tag" id="ls-tag">Level 1 Complete!</div>
+        <h2 id="ls-title">Nice work!</h2>
+        <div class="dg">
+          <div class="dc"><div class="dv" id="ls-c">0</div><div class="dl">correct</div></div>
+          <div class="dc"><div class="dv" id="ls-w">0</div><div class="dl">wrong</div></div>
+          <div class="dc"><div class="dv" id="ls-acc">—</div><div class="dl">accuracy</div></div>
+          <div class="dc"><div class="dv" id="ls-xp">0</div><div class="dl">XP earned</div></div>
+        </div>
+        <div class="unlock-msg" id="ls-unlock"></div>
+        <button class="dbtn green" id="ls-next">Next Level →</button>
+        <button class="dbtn teal" id="ls-retry">Retry this level</button>
+      </div>
+
+      <div id="done">
+        <div style="font-size:44px;margin-bottom:8px">🏆</div>
+        <h2>All levels complete!</h2>
+        <p id="dsub"></p>
+        <div class="dg">
+          <div class="dc"><div class="dv" id="dc1">0</div><div class="dl">correct</div></div>
+          <div class="dc"><div class="dv" id="dc2">0</div><div class="dl">wrong</div></div>
+          <div class="dc"><div class="dv" id="dc3">—</div><div class="dl">accuracy</div></div>
+          <div class="dc"><div class="dv" id="dc4">0</div><div class="dl">XP earned</div></div>
+        </div>
+        <button class="dbtn teal" id="d-again">Play again from Level 1</button>
+      </div>
+    </div>
+  </div>
+  <div id="levels"></div>
+</div>
+
+<div id="teacher-view">
+  <div id="tv-toolbar">
+    <h2>✏ Question Editor</h2>
+    <div id="tv-toolbar-right">
+      <button class="tv-btn gray" id="tv-reset">Restore defaults</button>
+      <button class="tv-btn gray" id="tv-cancel">Cancel</button>
+      <button class="tv-btn green" id="tv-save">Save &amp; Play</button>
+    </div>
+  </div>
+  <div id="tv-scroll">
+    <div id="qlist"></div>
+    <button id="add-btn">+ Add question</button>
+  </div>
+</div>
+
+<script>
+// Year 10 Chemistry — Chemical reactions (Task 8 revision)
+// Levels: 1 Equations & States · 2 Acid Reactions · 3 Precipitation · 4 Observations
+// Types (badge colour): eq, acid, ppt, obs
+// Chemical formulas use Unicode subscripts and superscripts (H₂SO₄, Cu²⁺) so they display without HTML.
+
+var LEVEL_INFO=[
+  null,
+  {"emoji": "⚖️", "title": "Equations & States", "unlock": "Level 2 unlocked: Acid Reactions!"},
+  {"emoji": "🧪", "title": "Acid Reactions", "unlock": "Level 3 unlocked: Precipitation!"},
+  {"emoji": "⚗️", "title": "Precipitation", "unlock": "Level 4 unlocked: Observations!"},
+  {"emoji": "👀", "title": "Observations", "unlock": "You've completed all levels!"}
+];
+var MAX_LEVEL=4;
+
+var DEFAULT_DATA=[
+  // ── LEVEL 1: Equations & States ──
+  {"lv":1,"t":"eq","q":"Which equation is balanced correctly?","a":"2Mg + O₂ → 2MgO","x":["Mg + O₂ → MgO","Mg + O → MgO","2Mg + O₂ → Mg₂O₂"],"note":"Only change the big numbers in front. Oxygen gas is O₂, and changing MgO to Mg₂O₂ makes a different substance."},
+  {"lv":1,"t":"eq","q":"Balance Al + O₂ → Al₂O₃. What are the coefficients?","a":"4, 3, 2","x":["2, 3, 1","4, 3, 1","2, 3, 2"],"note":"4Al + 3O₂ → 2Al₂O₃. Take oxygen to 6 on both sides first, then there are 4 Al."},
+  {"lv":1,"t":"eq","q":"Which is the balanced equation for making ammonia?","a":"N₂ + 3H₂ → 2NH₃","x":["N₂ + H₂ → 2NH₃","N₂ + 3H₂ → NH₃","2N₂ + 3H₂ → 2NH₃"],"note":"2 N on each side, and 6 H on each side."},
+  {"lv":1,"t":"eq","q":"Balance CH₄ + O₂ → CO₂ + H₂O.","a":"CH₄ + 2O₂ → CO₂ + 2H₂O","x":["CH₄ + O₂ → CO₂ + 2H₂O","CH₄ + 2O₂ → CO₂ + H₂O","CH₄ + 3O₂ → CO₂ + 2H₂O"],"note":"Do carbon, then hydrogen. Leave oxygen until last because it's in both products."},
+  {"lv":1,"t":"eq","q":"Balance C₃H₈ + O₂ → CO₂ + H₂O.","a":"C₃H₈ + 5O₂ → 3CO₂ + 4H₂O","x":["C₃H₈ + 3O₂ → 3CO₂ + 4H₂O","C₃H₈ + 5O₂ → 3CO₂ + 2H₂O","C₃H₈ + 4O₂ → 3CO₂ + 4H₂O"],"note":"3 C gives 3CO₂, 8 H gives 4H₂O, then 6 + 4 = 10 O on the right, so 5O₂."},
+  {"lv":1,"t":"eq","q":"Balance Fe + Cl₂ → FeCl₃.","a":"2Fe + 3Cl₂ → 2FeCl₃","x":["Fe + Cl₃ → FeCl₃","2Fe + 2Cl₂ → 2FeCl₃","Fe + 3Cl₂ → FeCl₃"],"note":"Chlorine is 2 on the left and 3 on the right, so take both to 6. Cl₃ doesn't exist: chlorine gas is Cl₂."},
+  {"lv":1,"t":"eq","q":"Balance Fe₂O₃ + CO → Fe + CO₂.","a":"Fe₂O₃ + 3CO → 2Fe + 3CO₂","x":["Fe₂O₃ + CO → 2Fe + CO₂","Fe₂O₃ + 2CO → 2Fe + 2CO₂","Fe₂O₃ + 3CO → Fe + 3CO₂"],"note":"2 Fe on the right. Each CO picks up one O from Fe₂O₃, so you need 3CO and 3CO₂."},
+  {"lv":1,"t":"eq","q":"A student 'balances' H₂ + O₂ → H₂O by writing H₂ + O₂ → H₂O₂. What's wrong?","a":"Changing the small number made a different substance (hydrogen peroxide)","x":["Nothing, because the atoms now balance","The equation is still unbalanced","You must always put a 2 in front of O₂"],"note":"The correct answer is 2H₂ + O₂ → 2H₂O. Only change the big numbers in front."},
+  {"lv":1,"t":"eq","q":"What is the formula of aluminium sulfate?","a":"Al₂(SO₄)₃","x":["AlSO₄","Al₃(SO₄)₂","Al₂SO₄"],"note":"Al³⁺ and SO₄²⁻: two Al give +6 and three SO₄ give −6. Brackets because there's more than one sulfate."},
+  {"lv":1,"t":"eq","q":"What is the formula of copper(II) nitrate?","a":"Cu(NO₃)₂","x":["CuNO₃","CuNO₃₂","Cu₂NO₃"],"note":"Cu²⁺ needs two NO₃⁻. Put brackets around NO₃ when there's more than one of it."},
+  {"lv":1,"t":"eq","q":"What is the formula of ammonium carbonate?","a":"(NH₄)₂CO₃","x":["NH₄CO₃","NH₄(CO₃)₂","(NH₄)₃CO₃"],"note":"NH₄⁺ has a 1+ charge and CO₃²⁻ has a 2− charge, so you need two ammonium ions."},
+  {"lv":1,"t":"eq","q":"What is the formula of calcium hydroxide?","a":"Ca(OH)₂","x":["CaOH","CaOH₂","Ca₂OH"],"note":"Ca²⁺ needs two OH⁻. Without brackets, CaOH₂ would mean one O and two H."},
+  {"lv":1,"t":"eq","q":"Which of these is insoluble in water, so gets (s)?","a":"AgCl","x":["NaCl","KNO₃","CuSO₄"],"note":"Chlorides are soluble except with Ag⁺ and Pb²⁺. Check the data sheet."},
+  {"lv":1,"t":"eq","q":"Which of these is soluble in water, so gets (aq)?","a":"Na₂CO₃","x":["CaCO₃","BaSO₄","Mg(OH)₂"],"note":"Carbonates are insoluble except with Na⁺, K⁺ and NH₄⁺."},
+  {"lv":1,"t":"eq","q":"What state symbol does water get in an equation?","a":"(l)","x":["(aq)","(g)","(s)"],"note":"Water is a pure liquid, so (l). (aq) means dissolved in water."},
+  {"lv":1,"t":"eq","q":"Sodium reacts with water. Which equation has the right state symbols?","a":"2Na(s) + 2H₂O(l) → 2NaOH(aq) + H₂(g)","x":["2Na(aq) + 2H₂O(l) → 2NaOH(aq) + H₂(g)","2Na(s) + 2H₂O(aq) → 2NaOH(aq) + H₂(g)","2Na(s) + 2H₂O(l) → 2NaOH(s) + H₂(aq)"],"note":"Sodium is a solid metal, water is (l), sodium hydroxide dissolves (aq), and hydrogen is a gas."},
+  // ── LEVEL 2: Acid Reactions ──
+  {"lv":2,"t":"acid","q":"Acid + metal produces…","a":"Salt + hydrogen","x":["Salt + water","Salt + water + carbon dioxide","Hydrogen + water"],"note":"Acid + metal → salt + hydrogen. The pop test shows the hydrogen."},
+  {"lv":2,"t":"acid","q":"Acid + carbonate produces…","a":"Salt + water + carbon dioxide","x":["Salt + hydrogen","Salt + water","Salt + carbon dioxide"],"note":"Carbonates give all three. Limewater turning milky shows the carbon dioxide."},
+  {"lv":2,"t":"acid","q":"Acid + hydroxide base produces…","a":"Salt + water","x":["Salt + hydrogen","Salt + water + carbon dioxide","Water + hydrogen"],"note":"This is neutralisation. No gas is made."},
+  {"lv":2,"t":"acid","q":"Which acid makes sulfate salts?","a":"Sulfuric acid","x":["Hydrochloric acid","Nitric acid","Ethanoic acid"],"note":"Hydrochloric → chloride, sulfuric → sulfate, nitric → nitrate, ethanoic → ethanoate."},
+  {"lv":2,"t":"acid","q":"Zinc + hydrochloric acid produces…","a":"Zinc chloride + hydrogen","x":["Zinc chloride + water","Zinc hydroxide + chlorine","Zinc + hydrogen chloride"],"note":"Acid + metal → salt + hydrogen."},
+  {"lv":2,"t":"acid","q":"Which reactants make calcium ethanoate + water + carbon dioxide?","a":"Calcium carbonate + ethanoic acid","x":["Calcium + ethanoic acid","Calcium hydroxide + ethanoic acid","Calcium carbonate + sulfuric acid"],"note":"Carbon dioxide means a carbonate. An ethanoate salt means ethanoic acid."},
+  {"lv":2,"t":"acid","q":"Magnesium + sulfuric acid:","a":"Mg(s) + H₂SO₄(aq) → MgSO₄(aq) + H₂(g)","x":["Mg(s) + H₂SO₄(aq) → MgSO₄(aq) + H₂O(l)","Mg(s) + 2H₂SO₄(aq) → MgSO₄(aq) + H₂(g)","Mg(aq) + H₂SO₄(aq) → MgSO₄(s) + H₂(g)"],"note":"Metals make hydrogen, not water. Magnesium is a solid and magnesium sulfate dissolves."},
+  {"lv":2,"t":"acid","q":"Aluminium + hydrochloric acid:","a":"2Al(s) + 6HCl(aq) → 2AlCl₃(aq) + 3H₂(g)","x":["Al(s) + HCl(aq) → AlCl(aq) + H₂(g)","Al(s) + 3HCl(aq) → AlCl₃(aq) + H₂(g)","2Al(s) + 6HCl(aq) → 2AlCl₃(aq) + 6H₂(g)"],"note":"Al³⁺ needs three Cl⁻, so AlCl₃. Six H on the left means 3H₂ on the right."},
+  {"lv":2,"t":"acid","q":"Potassium hydroxide + sulfuric acid:","a":"2KOH(aq) + H₂SO₄(aq) → K₂SO₄(aq) + 2H₂O(l)","x":["KOH(aq) + H₂SO₄(aq) → KSO₄(aq) + H₂O(l)","2KOH(aq) + H₂SO₄(aq) → K₂SO₄(aq) + H₂O(l)","KOH(aq) + H₂SO₄(aq) → K₂SO₄(aq) + H₂(g)"],"note":"SO₄²⁻ needs two K⁺, so K₂SO₄. Two KOH then make two waters."},
+  {"lv":2,"t":"acid","q":"Calcium hydroxide + nitric acid:","a":"Ca(OH)₂(s) + 2HNO₃(aq) → Ca(NO₃)₂(aq) + 2H₂O(l)","x":["Ca(OH)₂(s) + 2HNO₃(aq) → Ca(NO₃)₂(aq) + H₂O(l)","Ca(OH)₂(s) + HNO₃(aq) → CaNO₃(aq) + H₂O(l)","Ca(OH)₂(s) + 2HNO₃(aq) → Ca(NO₃)₂(aq) + H₂(g)"],"note":"Two OH groups make two waters. The class answer key (10.22) misses this several times, so don't copy it."},
+  {"lv":2,"t":"acid","q":"Zinc carbonate + sulfuric acid:","a":"ZnCO₃(s) + H₂SO₄(aq) → ZnSO₄(aq) + H₂O(l) + CO₂(g)","x":["ZnCO₃(s) + H₂SO₄(aq) → ZnSO₄(aq) + H₂(g) + CO₂(g)","ZnCO₃(s) + H₂SO₄(aq) → ZnSO₄(aq) + H₂O(l)","ZnCO₃(s) + 2H₂SO₄(aq) → ZnSO₄(aq) + 2H₂O(l) + CO₂(g)"],"note":"Carbonate reactions make water and carbon dioxide, not hydrogen."},
+  {"lv":2,"t":"acid","q":"Sodium carbonate + nitric acid:","a":"Na₂CO₃(s) + 2HNO₃(aq) → 2NaNO₃(aq) + H₂O(l) + CO₂(g)","x":["Na₂CO₃(s) + HNO₃(aq) → NaNO₃(aq) + H₂O(l) + CO₂(g)","Na₂CO₃(s) + 2HNO₃(aq) → Na₂NO₃(aq) + H₂O(l) + CO₂(g)","Na₂CO₃(s) + 2HNO₃(aq) → 2NaNO₃(aq) + H₂(g) + CO₂(g)"],"note":"Na⁺ and NO₃⁻ are both 1, so the salt is NaNO₃. Two Na means 2NaNO₃."},
+  {"lv":2,"t":"acid","q":"Sodium hydroxide + ethanoic acid produces…","a":"Sodium ethanoate + water","x":["Sodium ethanoate + hydrogen","Sodium ethanoate + water + carbon dioxide","Sodium hydroxide + water"],"note":"Acid + hydroxide → salt + water. The salt can be written CH₃COONa or NaCH₃COO."},
+  {"lv":2,"t":"acid","q":"Copper + hydrochloric acid produces…","a":"No reaction","x":["Copper chloride + hydrogen","Copper chloride + water","Copper hydroxide + chlorine"],"note":"Copper is too unreactive to react with these acids, which matches the class metals prac."},
+  {"lv":2,"t":"acid","q":"You want to make copper(II) sulfate and see fizzing. Which reactants?","a":"Copper(II) carbonate + sulfuric acid","x":["Copper + sulfuric acid","Copper(II) hydroxide + sulfuric acid","Copper(II) carbonate + hydrochloric acid"],"note":"Fizzing means a carbonate. The hydroxide works but doesn't fizz, copper metal doesn't react, and hydrochloric acid gives a chloride."},
+  {"lv":2,"t":"acid","q":"Barium carbonate + sulfuric acid. What state symbol does the barium sulfate get?","a":"(s), because barium sulfate is insoluble","x":["(aq), because all salts dissolve","(aq), because it's made in solution","(l), because it's a product"],"note":"Check every salt on the data sheet. BaSO₄ is insoluble, so it's (s)."},
+  // ── LEVEL 3: Precipitation ──
+  {"lv":3,"t":"ppt","q":"A precipitation reaction is when…","a":"Two solutions mix and an insoluble solid forms","x":["An acid reacts with a metal","A solid dissolves in water","A gas bubbles out of a solution"],"note":"The solid that forms is called the precipitate."},
+  {"lv":3,"t":"ppt","q":"Silver nitrate + sodium chloride. What is the precipitate?","a":"Silver chloride, AgCl","x":["Sodium nitrate, NaNO₃","Silver nitrate, AgNO₃","No precipitate forms"],"note":"Swap partners: AgCl and NaNO₃. Silver chloride is insoluble; sodium nitrate dissolves."},
+  {"lv":3,"t":"ppt","q":"Silver nitrate + sodium chloride:","a":"AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq)","x":["AgNO₃(aq) + NaCl(aq) → AgCl(aq) + NaNO₃(s)","AgNO₃(s) + NaCl(s) → AgCl(s) + NaNO₃(s)","AgNO₃(aq) + NaCl(aq) → AgCl(aq) + NaNO₃(aq)"],"note":"Both reactants are solutions (aq). Only the insoluble product gets (s)."},
+  {"lv":3,"t":"ppt","q":"Barium chloride + sodium sulfate:","a":"BaCl₂(aq) + Na₂SO₄(aq) → BaSO₄(s) + 2NaCl(aq)","x":["BaCl₂(aq) + Na₂SO₄(aq) → BaSO₄(aq) + 2NaCl(s)","BaCl₂(aq) + Na₂SO₄(aq) → BaSO₄(s) + NaCl(aq)","BaCl(aq) + NaSO₄(aq) → BaSO₄(s) + NaCl(aq)"],"note":"Barium sulfate is the precipitate. Two Na and two Cl means 2NaCl."},
+  {"lv":3,"t":"ppt","q":"Lead(II) nitrate + potassium iodide:","a":"Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(s) + 2KNO₃(aq)","x":["Pb(NO₃)₂(aq) + KI(aq) → PbI₂(s) + KNO₃(aq)","Pb(NO₃)₂(aq) + 2KI(aq) → PbI₂(aq) + 2KNO₃(s)","PbNO₃(aq) + KI(aq) → PbI(s) + KNO₃(aq)"],"note":"Pb²⁺ needs two I⁻, so PbI₂, which is the yellow precipitate."},
+  {"lv":3,"t":"ppt","q":"Copper(II) sulfate + sodium hydroxide:","a":"CuSO₄(aq) + 2NaOH(aq) → Cu(OH)₂(s) + Na₂SO₄(aq)","x":["CuSO₄(aq) + NaOH(aq) → CuOH(s) + NaSO₄(aq)","CuSO₄(aq) + 2NaOH(aq) → Cu(OH)₂(aq) + Na₂SO₄(s)","CuSO₄(aq) + NaOH(aq) → Cu(OH)₂(s) + Na₂SO₄(aq)"],"note":"Cu²⁺ needs two OH⁻, so Cu(OH)₂, and you need two NaOH."},
+  {"lv":3,"t":"ppt","q":"Iron(III) chloride + sodium hydroxide. What is the precipitate?","a":"Fe(OH)₃","x":["Fe(OH)₂","NaCl","FeOH"],"note":"Fe³⁺ needs three OH⁻. NaCl stays dissolved."},
+  {"lv":3,"t":"ppt","q":"Sodium nitrate + potassium chloride. What happens?","a":"No precipitate, because NaCl and KNO₃ are both soluble","x":["Sodium chloride precipitates","Potassium nitrate precipitates","Both products precipitate"],"note":"Sodium and potassium compounds always dissolve, and so do nitrates."},
+  {"lv":3,"t":"ppt","q":"Silver nitrate + magnesium chloride:","a":"2AgNO₃(aq) + MgCl₂(aq) → 2AgCl(s) + Mg(NO₃)₂(aq)","x":["AgNO₃(aq) + MgCl₂(aq) → AgCl(s) + MgNO₃(aq)","AgNO₃(aq) + MgCl₂(aq) → AgCl₂(s) + MgNO₃(aq)","2AgNO₃(aq) + MgCl₂(aq) → 2AgCl(aq) + Mg(NO₃)₂(s)"],"note":"MgCl₂ brings two Cl⁻, so you need two AgNO₃. Silver chloride is AgCl, never AgCl₂."},
+  {"lv":3,"t":"ppt","q":"Which pair forms a precipitate?","a":"Barium nitrate + potassium sulfate","x":["Sodium chloride + potassium nitrate","Sodium carbonate + potassium chloride","Ammonium nitrate + sodium chloride"],"note":"Swapping gives barium sulfate, which is insoluble. The other pairs only make soluble products."},
+  {"lv":3,"t":"ppt","q":"Which pair could you mix to make solid barium carbonate?","a":"Barium chloride + sodium carbonate","x":["Barium sulfate + sodium carbonate","Barium chloride + calcium carbonate","Barium + carbon dioxide"],"note":"You need two soluble solutions. BaSO₄ and CaCO₃ don't dissolve, so they can't swap partners."},
+  {"lv":3,"t":"ppt","q":"Calcium chloride + sodium carbonate:","a":"CaCl₂(aq) + Na₂CO₃(aq) → CaCO₃(s) + 2NaCl(aq)","x":["CaCl₂(aq) + Na₂CO₃(aq) → CaCO₃(aq) + 2NaCl(s)","CaCl(aq) + NaCO₃(aq) → CaCO₃(s) + NaCl(aq)","CaCl₂(aq) + Na₂CO₃(aq) → CaCO₃(s) + NaCl(aq)"],"note":"Calcium carbonate is the white precipitate. Two Na and two Cl make 2NaCl."},
+  {"lv":3,"t":"ppt","q":"Stretch: aluminium sulfate + sodium hydroxide:","a":"Al₂(SO₄)₃(aq) + 6NaOH(aq) → 2Al(OH)₃(s) + 3Na₂SO₄(aq)","x":["Al₂(SO₄)₃(aq) + 3NaOH(aq) → 2Al(OH)₃(s) + 3Na₂SO₄(aq)","Al₂(SO₄)₃(aq) + 6NaOH(aq) → Al₂(OH)₆(s) + 3Na₂SO₄(aq)","Al₂(SO₄)₃(aq) + 6NaOH(aq) → 2Al(OH)₃(aq) + 3Na₂SO₄(s)"],"note":"Balance aluminium first (2Al(OH)₃), then hydroxide (6NaOH), then sulfate (3Na₂SO₄)."},
+  // ── LEVEL 4: Observations ──
+  {"lv":4,"t":"obs","q":"Which is a proper observation for magnesium in hydrochloric acid?","a":"Silvery-grey solid dissolves; bubbles of colourless, odourless gas form","x":["Hydrogen gas is produced","Magnesium chloride forms","The magnesium reacts with the acid"],"note":"Observations describe what you see, hear, smell or feel. Never name a product you can't see."},
+  {"lv":4,"t":"obs","q":"Marble chips (calcium carbonate) are added to hydrochloric acid. You'd observe…","a":"White solid dissolves; bubbles of colourless, odourless gas; colourless solution remains","x":["White solid dissolves; colourless solution turns blue","A white precipitate forms in a colourless solution","No visible change"],"note":"Carbonate + acid always fizzes. Calcium compounds are colourless in solution."},
+  {"lv":4,"t":"obs","q":"Copper(II) carbonate powder is added to sulfuric acid. You'd observe…","a":"Green solid dissolves; bubbles of colourless gas; colourless solution turns blue","x":["Blue solid dissolves; colourless solution turns green","Green solid dissolves; no bubbles; solution stays colourless","A blue precipitate forms; bubbles of colourless gas"],"note":"Copper(II) carbonate is green. The Cu²⁺ ions it makes turn the solution blue."},
+  {"lv":4,"t":"obs","q":"Solid copper(II) hydroxide is added to sulfuric acid. You'd observe…","a":"Blue solid dissolves; colourless solution turns blue; no bubbles","x":["Blue solid dissolves; bubbles of colourless gas","Green solid dissolves; solution turns blue","A blue precipitate forms in a colourless solution"],"note":"No carbonate, so no gas. The solution turns blue because of Cu²⁺."},
+  {"lv":4,"t":"obs","q":"Sodium hydroxide solution is mixed with hydrochloric acid. You'd observe…","a":"Two colourless solutions form a colourless solution; no visible change, mixture warms","x":["A white precipitate forms","Bubbles of colourless gas form","The solution turns blue"],"note":"Neutralisation of a hydroxide often shows no visible change. Universal indicator would show it."},
+  {"lv":4,"t":"obs","q":"Silver nitrate and sodium chloride solutions are mixed. You'd observe…","a":"A white precipitate forms in a colourless solution","x":["A yellow precipitate forms","Bubbles of colourless gas form","No visible change"],"note":"Silver chloride is white."},
+  {"lv":4,"t":"obs","q":"Copper(II) sulfate and sodium hydroxide solutions are mixed. You'd observe…","a":"A blue precipitate forms; the blue colour of the solution fades","x":["A white precipitate forms; the solution stays blue","Bubbles of colourless gas; the solution turns colourless","A red-brown precipitate forms"],"note":"Copper(II) hydroxide is a blue solid. As the Cu²⁺ leaves the solution, the blue fades."},
+  {"lv":4,"t":"obs","q":"Iron(III) chloride and sodium hydroxide solutions are mixed. You'd observe…","a":"A red-brown precipitate forms","x":["A blue precipitate forms","A green precipitate forms","A white precipitate forms"],"note":"Iron(III) hydroxide is red-brown. Iron(II) hydroxide is green."},
+  {"lv":4,"t":"obs","q":"Lead(II) nitrate and potassium iodide solutions are mixed. You'd observe…","a":"A bright yellow precipitate forms","x":["A white precipitate forms","A blue precipitate forms","No visible change"],"note":"Lead(II) iodide is bright yellow."},
+  {"lv":4,"t":"obs","q":"Iron(II) sulfate and sodium hydroxide solutions are mixed. You'd observe…","a":"A pale green solution and a colourless solution form a green precipitate","x":["A yellow-brown solution and a colourless solution form a red-brown precipitate","A blue solution and a colourless solution form a blue precipitate","Two colourless solutions form a white precipitate"],"note":"Fe²⁺ solutions are pale green and iron(II) hydroxide is green. Iron(III) is the red-brown one."},
+  {"lv":4,"t":"obs","q":"What colour is a solution containing Cu²⁺ ions?","a":"Blue","x":["Pale green","Yellow-brown","Colourless"],"note":"Fe²⁺ is pale green, Fe³⁺ is yellow-brown, and most other ions are colourless."},
+  {"lv":4,"t":"obs","q":"What colour is a solution containing Fe³⁺ ions?","a":"Yellow-brown","x":["Pale green","Blue","Colourless"],"note":"Fe²⁺ is pale green. Data sheets word these slightly differently, so use the words on yours."},
+  {"lv":4,"t":"obs","q":"How do you test for hydrogen gas?","a":"Hold a lit splint at the mouth of the tube: a squeaky pop","x":["Bubble it through limewater: it turns milky","Hold a glowing splint in it: it relights","Add universal indicator: it turns green"],"note":"Limewater is the test for carbon dioxide. A glowing splint relighting is the test for oxygen."},
+  {"lv":4,"t":"obs","q":"How do you test for carbon dioxide?","a":"Bubble it through limewater: it turns from clear to milky","x":["Hold a lit splint at the mouth: a squeaky pop","Hold a glowing splint in it: it relights","Smell it: it smells like vinegar"],"note":"The milkiness is a calcium carbonate precipitate forming in the limewater."},
+  {"lv":4,"t":"obs","q":"Why isn't \"carbon dioxide was produced\" an observation?","a":"You can't see which gas it is; you only see colourless bubbles","x":["Carbon dioxide isn't made when acids react","Observations must include a number","It should say CO₂ instead"],"note":"Write \"bubbles of a colourless, odourless gas\". Naming the gas needs a test, like limewater."}
+];
+
+var STORE_KEY="garrick-chem-reactions-v1";
+function copyData(src){return src.map(function(d){return JSON.parse(JSON.stringify(d));});}
+function loadData(){
+  try{var raw=localStorage.getItem(STORE_KEY);if(raw){var p=JSON.parse(raw);if(Array.isArray(p)&&p.length)return p;}}catch(e){}
+  return copyData(DEFAULT_DATA);
+}
+function saveData(){try{localStorage.setItem(STORE_KEY,JSON.stringify(DATA));}catch(e){}}
+var DATA=loadData();
+
+// ── game state ──
+var currentLevel=1;
+var deck=[],weak=[],cur=null,answered=false;
+var C=0,W=0,streak=0,lvXP=0;
+var totalC=0,totalW=0,totalXP=0;
+
+function shuf(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function cardsForLevel(lv){return DATA.filter(function(d){return d.lv===lv;});}
+function $(id){return document.getElementById(id);}
+
+function startLevel(lv){
+  currentLevel=lv;
+  deck=shuf(cardsForLevel(lv).slice());
+  weak=[];C=0;W=0;streak=0;lvXP=0;
+  hideAll();
+  $("retry-bar").style.display="none";
+  updateBar();updateStats();renderJumps();
+  next();
+}
+
+function hideAll(){
+  ["qhead","grid","frow","stats","level-summary","done"].forEach(function(id){$(id).style.display="none";});
+}
+
+var BADGES={eq:["b-eq","equations"],acid:["b-acid","acid reactions"],ppt:["b-ppt","precipitation"],obs:["b-obs","observations"]};
+var TERM_POOL_MIN=4;
+
+function next(){
+  answered=false;
+  $("nxt").style.display="none";
+  $("fb").textContent="";$("fb").className="";
+  $("fnote").style.display="none";$("fnote").textContent="";
+
+  if(!deck.length&&!weak.length){showLevelSummary();return;}
+  if(!deck.length){deck=shuf(weak.slice());weak=[];$("retry-bar").style.display="block";}
+
+  cur=deck.shift();updateProg();
+  var b=BADGES[cur.t]||["b-eq","question"];
+  $("badge").className=b[0];$("badge").textContent=b[1];
+
+  var qt,qs,correct,dists;
+  if(cur.t==="term"){
+    var pool=DATA.filter(function(c){return c!==cur&&c.t==="term";});
+    var showTerm=Math.random()<0.5;
+    if(showTerm){qt=cur.q;qs="Which definition matches this term?";correct=cur.a;dists=shuf(pool.slice()).map(function(c){return c.a;});}
+    else{qt=cur.a;qs="Which term matches this definition?";correct=cur.q;dists=shuf(pool.slice()).map(function(c){return c.q;});}
+  } else {
+    qt=cur.q;qs="Choose the best answer";correct=cur.a;dists=shuf((cur.x||[]).filter(function(s){return s&&s.trim();}).slice());
+  }
+  dists=dists.filter(function(d){return d!==correct;}).slice(0,3);
+
+  var qel=$("qtext");qel.textContent=qt;
+  qel.className=qt.length>130?"long":(qt.length>70?"mid":"");
+  $("qsub").textContent=qs;
+  $("qhead").style.display="block";$("frow").style.display="flex";$("stats").style.display="flex";$("grid").style.display="grid";
+
+  var opts=shuf([correct].concat(dists));
+  $("grid").className=opts.some(function(o){return o&&o.length>38;})?"wide":"";
+  for(var i=0;i<4;i++){
+    var el=$("o"+i);
+    el.className="opt";
+    el.style.display=opts[i]===undefined?"none":"flex";
+    el.querySelector(".txt").textContent=opts[i]||"";
+    el.dataset.val=opts[i]||"";
+  }
+  bindOpts(correct);
+}
+
+function showNote(){
+  if(cur.note&&cur.note.trim()){$("fnote").textContent=cur.note;$("fnote").style.display="block";}
+}
+
+function bindOpts(correct){
+  for(var i=0;i<4;i++){
+    (function(el){
+      var n=el.cloneNode(true);el.parentNode.replaceChild(n,el);
+      function handle(e){if(e.type==="touchend")e.preventDefault();pick(n,n.dataset.val,correct);}
+      n.addEventListener("touchend",handle,{passive:false});
+      n.addEventListener("click",handle);
+      n.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();handle(e);}});
+    })($("o"+i));
+  }
+}
+
+function pick(el,chosen,correct){
+  if(answered)return;answered=true;
+  for(var i=0;i<4;i++){var t=$("o"+i);if(t.dataset.val===correct)t.classList.add("show");}
+  var fb=$("fb");
+  if(chosen===correct){
+    el.classList.add("ok");el.classList.remove("show");
+    C++;totalC++;streak++;
+    var gain=15+(streak>=3?5:0);lvXP+=gain;totalXP+=gain;
+    fb.textContent=streak>=3?"✓ "+streak+" streak! +"+gain+" XP":"✓ Correct!";fb.className="fbok";
+  } else {
+    el.classList.add("bad");W++;totalW++;streak=0;weak.push(cur);
+    fb.textContent="✗ Answer: "+correct;fb.className="fbbad";
+  }
+  showNote();updateStats();
+  $("nxt").style.display="block";
+}
+
+function updateBar(){$("lv").textContent="Level "+currentLevel+" / "+MAX_LEVEL;}
+function updateStats(){
+  $("sc").textContent=C;$("sr").textContent=weak.length;$("ss").textContent=streak;
+  var tot=C+W;$("sa").textContent=tot?Math.round(C/tot*100)+"%":"—";
+}
+function updateProg(){
+  var total=C+W+deck.length+weak.length+1;
+  $("prog").style.width=Math.round((C+W)/total*100)+"%";
+}
+
+function renderJumps(){
+  var h=$("levels");h.innerHTML="";
+  for(var n=1;n<=MAX_LEVEL;n++){(function(n){
+    var b=document.createElement("button");b.className="lvjump"+(n===currentLevel?" on":"");
+    b.textContent=LEVEL_INFO[n].emoji+" "+n;b.title=LEVEL_INFO[n].title;b.setAttribute("aria-label","Jump to level "+n+": "+LEVEL_INFO[n].title);
+    b.addEventListener("click",function(){startLevel(n);});
+    h.appendChild(b);
+  })(n);}
+}
+
+function showLevelSummary(){
+  hideAll();$("retry-bar").style.display="none";
+  var info=LEVEL_INFO[currentLevel],tot=C+W;
+  $("ls-emoji").textContent=info.emoji;
+  $("ls-tag").textContent="Level "+currentLevel+" Complete!";
+  $("ls-title").textContent=info.title;
+  $("ls-c").textContent=C;$("ls-w").textContent=W;
+  $("ls-acc").textContent=tot?Math.round(C/tot*100)+"%":"—";
+  $("ls-xp").textContent=lvXP;
+  $("ls-unlock").textContent=info.unlock;
+  $("ls-next").textContent=currentLevel>=MAX_LEVEL?"See final results 🏆":"Start Level "+(currentLevel+1)+" →";
+  $("prog").style.width="100%";
+  $("level-summary").style.display="flex";
+}
+
+function showFinalDone(){
+  hideAll();$("done").style.display="flex";
+  var tot=totalC+totalW;
+  $("dc1").textContent=totalC;$("dc2").textContent=totalW;
+  $("dc3").textContent=tot?Math.round(totalC/tot*100)+"%":"—";
+  $("dc4").textContent=totalXP;
+  $("dsub").textContent="All "+MAX_LEVEL+" levels cleared!";
+  $("prog").style.width="100%";
+}
+
+function wire(id,fn){
+  var el=$(id);if(!el)return;
+  el.addEventListener("touchend",function(e){e.preventDefault();fn();},{passive:false});
+  el.addEventListener("click",fn);
+}
+
+wire("nxt",next);
+wire("ls-next",function(){if(currentLevel>=MAX_LEVEL)showFinalDone();else startLevel(currentLevel+1);});
+wire("ls-retry",function(){startLevel(currentLevel);});
+wire("d-again",function(){totalC=0;totalW=0;totalXP=0;startLevel(1);});
+
+// ── teacher editor ──
+var snapshot=null;
+wire("teacher-toggle",function(){
+  if($("teacher-view").style.display==="flex"){DATA=snapshot||DATA;showQuiz();}else{showTeacher();}
+});
+function showQuiz(){$("quiz-view").style.display="flex";$("teacher-view").style.display="none";}
+function showTeacher(){
+  snapshot=copyData(DATA);
+  $("quiz-view").style.display="none";$("teacher-view").style.display="flex";
+  renderEditor();
+}
+wire("tv-save",function(){saveData();snapshot=null;showQuiz();totalC=0;totalW=0;totalXP=0;startLevel(1);});
+wire("tv-cancel",function(){DATA=snapshot||DATA;snapshot=null;showQuiz();});
+var resetArmed=false;
+wire("tv-reset",function(){
+  var b=$("tv-reset");
+  if(!resetArmed){resetArmed=true;b.textContent="Tap again to restore";setTimeout(function(){resetArmed=false;b.textContent="Restore defaults";},3000);return;}
+  resetArmed=false;b.textContent="Restore defaults";
+  DATA=copyData(DEFAULT_DATA);renderEditor();
+});
+
+var TYPES=["eq", "acid", "ppt", "obs"];
+var TYPE_LABELS={eq:"Equations & States",acid:"Acid Reactions",ppt:"Precipitation",obs:"Observations"};
+
+function renderEditor(){
+  var list=$("qlist");list.innerHTML="";
+  DATA.forEach(function(d,i){renderCard(d,i,list);});
+}
+
+function pillRow(label,values,labelFor,isActive,onPick){
+  var w=document.createElement("div");w.innerHTML='<div class="field-label">'+label+'</div>';
+  var row=document.createElement("div");row.className="pills";
+  values.forEach(function(v){
+    var p=document.createElement("div");p.className="pill"+(isActive(v)?" active":"");p.textContent=labelFor(v);
+    p.addEventListener("click",function(){onPick(v);row.querySelectorAll(".pill").forEach(function(x){x.classList.remove("active");});p.classList.add("active");});
+    row.appendChild(p);
+  });
+  w.appendChild(row);return w;
+}
+
+function renderCard(d,i,list){
+  var wrap=document.createElement("div");wrap.className="qcard";
+  var hdr=document.createElement("div");hdr.className="qcard-header";
+  hdr.innerHTML='<span class="qcard-num">Q'+(i+1)+'</span><span class="qcard-preview">'+escHtml(d.q)+'</span><span class="qcard-lv">Lv '+d.lv+'</span><button class="qcard-del">Delete</button>';
+  wrap.appendChild(hdr);
+  var body=document.createElement("div");body.className="qcard-body";
+
+  body.appendChild(pillRow("Level",LEVEL_INFO.map(function(_,n){return n;}).slice(1),function(n){return "Level "+n;},function(n){return d.lv===n;},function(n){d.lv=n;hdr.querySelector(".qcard-lv").textContent="Lv "+n;}));
+  body.appendChild(pillRow("Type",TYPES,function(t){return TYPE_LABELS[t];},function(t){return d.t===t;},function(t){d.t=t;}));
+  body.appendChild(makeField("Question",d.q,function(v){d.q=v;hdr.querySelector(".qcard-preview").textContent=v;}));
+  body.appendChild(makeField("Correct answer",d.a,function(v){d.a=v;}));
+
+  var ob=document.createElement("div");
+  ob.innerHTML='<div class="field-label" style="margin-bottom:6px">Wrong options (3)</div>';
+  var og=document.createElement("div");og.className="opts-grid";
+  for(var j=0;j<3;j++){(function(j){
+    var inp=document.createElement("input");inp.className="field-input";inp.type="text";inp.value=(d.x&&d.x[j])||"";
+    inp.setAttribute("aria-label","Wrong option "+(j+1));
+    inp.addEventListener("input",function(){if(!d.x)d.x=[];d.x[j]=inp.value;});
+    og.appendChild(inp);
+  })(j);}
+  ob.appendChild(og);body.appendChild(ob);
+  body.appendChild(makeTextarea("Explanation shown after answering",d.note||"",function(v){d.note=v;}));
+  wrap.appendChild(body);
+
+  hdr.addEventListener("click",function(e){if(e.target.classList.contains("qcard-del"))return;body.classList.toggle("open");});
+  var del=hdr.querySelector(".qcard-del"),armed=false;
+  del.addEventListener("click",function(e){
+    e.stopPropagation();
+    if(!armed){armed=true;del.textContent="Sure?";setTimeout(function(){armed=false;del.textContent="Delete";},3000);return;}
+    DATA.splice(i,1);renderEditor();
+  });
+  list.appendChild(wrap);
+}
+
+function makeField(label,val,onChange){
+  var w=document.createElement("div");
+  var l=document.createElement("div");l.className="field-label";l.textContent=label;
+  var inp=document.createElement("input");inp.className="field-input";inp.type="text";inp.value=val;
+  inp.addEventListener("input",function(){onChange(inp.value);});
+  w.appendChild(l);w.appendChild(inp);return w;
+}
+function makeTextarea(label,val,onChange){
+  var w=document.createElement("div");
+  var l=document.createElement("div");l.className="field-label";l.textContent=label;
+  var ta=document.createElement("textarea");ta.className="field-input";ta.value=val;ta.rows=3;
+  ta.addEventListener("input",function(){onChange(ta.value);});
+  w.appendChild(l);w.appendChild(ta);return w;
+}
+
+wire("add-btn",function(){
+  DATA.push({lv:currentLevel,t:"eq",q:"New question",a:"Correct answer",x:["Wrong 1","Wrong 2","Wrong 3"],note:""});
+  renderEditor();
+  var cards=document.querySelectorAll(".qcard-body");
+  if(cards.length)cards[cards.length-1].classList.add("open");
+  $("tv-scroll").scrollTop=999999;
+});
+
+function escHtml(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+startLevel(1);
+</script>
+</body>
+</html>
